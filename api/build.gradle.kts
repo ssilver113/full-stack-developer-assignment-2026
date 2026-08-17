@@ -44,3 +44,10 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+tasks.bootRun {
+    // `./gradlew bootRun` is the documented way to start the application locally,
+    // so the dev profile is active by default and no extra flag is needed to get
+    // the H2 console. A built jar starts without it.
+    args("--spring.profiles.active=dev")
+}

@@ -1,0 +1,9 @@
+# Test overrides. Kept as a profile rather than a bare application.yaml in
+# src/test/resources: an identically named file would shadow the main
+# configuration entirely, silently dropping settings such as ddl-auto: validate
+# that the tests are specifically meant to exercise.
+spring:
+  datasource:
+    # Throwaway in-memory database, so a test run neither depends on nor corrupts
+    # the local ./data/usersdb file used when developing.
+    url: jdbc:h2:mem:usermanagement-test;DB_CLOSE_DELAY=-1
