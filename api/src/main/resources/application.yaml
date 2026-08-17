@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: user-management-api
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Only the health endpoint is exposed. Actuator's remaining endpoints are
+        # not needed here, and exposing them by default would be careless.
+        include: health
