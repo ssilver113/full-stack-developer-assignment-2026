@@ -1,0 +1,18 @@
+# Normalise line endings: development happens on Windows, CI runs on Linux.
+# Without this, a checkout on either platform can show every line as modified.
+* text=auto eol=lf
+
+# Scripts that must keep platform-native endings to remain executable.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+gradlew text eol=lf
+
+# Binary files: never touch, never diff as text.
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
