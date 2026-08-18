@@ -1,0 +1,42 @@
+.user-list__header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.user-list__note {
+  color: var(--text-muted);
+}
+
+// Keeps a wide table from forcing the whole page to scroll sideways.
+.user-list__scroll {
+  overflow-x: auto;
+}
+
+.user-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.user-table th,
+.user-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.7rem 0.75rem;
+  text-align: left;
+}
+
+.user-table th {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.user-table__actions {
+  text-align: right;
+  white-space: nowrap;
+  width: 1%;
+}

@@ -1,13 +1,49 @@
-<h1>Users</h1>
+<div class="user-list__header">
+  <h1>Users</h1>
+  <a class="button button--primary" routerLink="/users/new">Create User</a>
+</div>
 
 @if (loading()) {
-  <p>Loading users...</p>
+  <p class="user-list__note">Loading users...</p>
 } @else if (error(); as message) {
-  <p role="alert">{{ message }}</p>
+  <p class="alert" role="alert">{{ message }}</p>
+  <button class="button" type="button" (click)="load()">Try again</button>
+} @else if (users().length === 0) {
+  <p class="user-list__note">
+    No users registered yet.
+    <a routerLink="/users/new">Create the first one</a>
+  </p>
 } @else {
-  @for (user of users(); track user.id) {
-    <p>{{ user.firstName }} {{ user.lastName }} - {{ user.email }}</p>
-  } @empty {
-    <p>No users registered yet.</p>
-  }
+  <div class="user-list__scroll">
+    <table class="user-table">
+      <caption class="visually-hidden">
+        Registered users
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">First Name</th>
+          <th scope="col">Last Name</th>
+          <th scope="col">Email</th>
+          <th scope="col"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users(); track user.id) {
+          <tr>
+            <td>{{ user.firstName }}</td>
+            <td>{{ user.lastName }}</td>
+            <td>{{ user.email }}</td>
+            <td class="user-table__actions">
+              <a
+                class="button button--small"
+                [routerLink]="['/users', user.id, 'edit']"
+                [attr.aria-label]="'Edit ' + user.firstName + ' ' + user.lastName"
+                >Edit</a
+              >
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 }

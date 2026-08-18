@@ -65,6 +65,20 @@ h1 {
   opacity: 0.6;
 }
 
+.button--small {
+  font-size: 0.9rem;
+  padding: 0.35rem 0.75rem;
+}
+
+.visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .alert {
   background: var(--danger-surface);
   border: 1px solid var(--danger);
