@@ -31,6 +31,10 @@ input[aria-invalid='true'] {
   border-color: var(--danger);
 }
 
+.user-form__note {
+  color: var(--text-muted);
+}
+
 .user-form__error {
   color: var(--danger);
   font-size: 0.9rem;

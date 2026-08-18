@@ -10,6 +10,11 @@ import { usersFeature } from '../users.reducer';
 
 type FieldName = 'firstName' | 'lastName' | 'email';
 
+// A route parameter is a string, so what it identifies is decided here once
+// rather than re-derived at each use. Number('abc') would otherwise reach the
+// API as /api/users/NaN.
+type Target = { mode: 'create' } | { mode: 'edit'; id: number } | { mode: 'invalid' };
+
 // Worded to match the API's own validation messages, so a user never sees the
 // same rule phrased two different ways.
 const REQUIRED_MESSAGES: Record<FieldName, string> = {
@@ -42,23 +47,41 @@ export class UserForm implements OnInit {
     email: ['', [Validators.required, Validators.email, Validators.maxLength(320)]],
   });
 
-  protected readonly saving = this.store.selectSignal(usersFeature.selectLoading);
+  protected readonly busy = this.store.selectSignal(usersFeature.selectLoading);
   protected readonly error = this.store.selectSignal(usersFeature.selectError);
 
-  private readonly userId = computed(() => {
+  protected readonly target = computed<Target>(() => {
     const raw = this.id();
-    return raw === undefined ? null : Number(raw);
+    if (raw === undefined) {
+      return { mode: 'create' };
+    }
+    return /^\d+$/.test(raw) ? { mode: 'edit', id: Number(raw) } : { mode: 'invalid' };
   });
 
-  protected readonly isEdit = computed(() => this.userId() !== null);
+  protected readonly isEdit = computed(() => this.target().mode === 'edit');
 
   private readonly existing = toSignal(
-    toObservable(this.userId).pipe(
-      switchMap((id) =>
-        id === null ? of(undefined) : this.store.select(usersFeature.selectUserById(id)),
+    toObservable(this.target).pipe(
+      switchMap((target) =>
+        target.mode === 'edit'
+          ? this.store.select(usersFeature.selectUserById(target.id))
+          : of(undefined),
       ),
     ),
   );
+
+  // Editing a user we have not got yet: either still loading, or the load failed.
+  protected readonly awaitingUser = computed(() => this.isEdit() && this.existing() === undefined);
+
+  // Absent only once a load has settled. While it is in flight, or when it
+  // failed outright, the user's absence has not actually been established.
+  protected readonly notFound = computed(() => {
+    const target = this.target();
+    if (target.mode === 'invalid') {
+      return true;
+    }
+    return target.mode === 'edit' && this.existing() === undefined && !this.busy() && !this.error();
+  });
 
   constructor() {
     // Only prefill an untouched form, so a store update cannot overwrite typing.
@@ -76,7 +99,8 @@ export class UserForm implements OnInit {
 
   ngOnInit(): void {
     // The edit page can be opened directly, with no list in the store to read.
-    if (this.isEdit()) {
+    // A malformed id matches nothing, so it is not worth a request.
+    if (this.target().mode === 'edit') {
       this.store.dispatch(UsersActions.loadUsers());
     }
   }
@@ -105,12 +129,12 @@ export class UserForm implements OnInit {
       return;
     }
 
+    const target = this.target();
     const draft = this.form.getRawValue();
-    const id = this.userId();
-    if (id === null) {
+    if (target.mode === 'create') {
       this.store.dispatch(UsersActions.createUser({ draft }));
-    } else {
-      this.store.dispatch(UsersActions.updateUser({ id, draft }));
+    } else if (target.mode === 'edit') {
+      this.store.dispatch(UsersActions.updateUser({ id: target.id, draft }));
     }
   }
 }

@@ -2,8 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Store, provideState, provideStore } from '@ngrx/store';
 
+import { UsersActions } from '../users.actions';
 import { usersFeature } from '../users.reducer';
 import { UserForm } from './user-form';
+
+const ada = { id: 1, firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com' };
 
 describe('UserForm', () => {
   let fixture: ComponentFixture<UserForm>;
@@ -13,10 +16,17 @@ describe('UserForm', () => {
       imports: [UserForm],
       providers: [provideRouter([]), provideStore(), provideState(usersFeature)],
     }).compileComponents();
-
-    fixture = TestBed.createComponent(UserForm);
-    await fixture.whenStable();
   });
+
+  // The route parameter has to be set before the first change detection, since
+  // the component decides what it is editing during initialisation.
+  async function createComponent(id?: string): Promise<void> {
+    fixture = TestBed.createComponent(UserForm);
+    if (id !== undefined) {
+      fixture.componentRef.setInput('id', id);
+    }
+    await fixture.whenStable();
+  }
 
   function fill(field: string, value: string): void {
     const input: HTMLInputElement = fixture.nativeElement.querySelector(`#${field}`);
@@ -36,6 +46,8 @@ describe('UserForm', () => {
   }
 
   it('shows a message for every field when an empty form is submitted', async () => {
+    await createComponent();
+
     await submit();
 
     expect(messages()).toEqual([
@@ -46,6 +58,7 @@ describe('UserForm', () => {
   });
 
   it('rejects a malformed email address', async () => {
+    await createComponent();
     fill('firstName', 'Ada');
     fill('lastName', 'Lovelace');
     fill('email', 'not-an-email');
@@ -56,6 +69,7 @@ describe('UserForm', () => {
   });
 
   it('clears the message once the email is corrected', async () => {
+    await createComponent();
     fill('email', 'not-an-email');
     await submit();
     expect(messages()).toContain('Email must be a valid address');
@@ -67,6 +81,7 @@ describe('UserForm', () => {
   });
 
   it('dispatches a create action once every field is valid', async () => {
+    await createComponent();
     const dispatch = vi.spyOn(TestBed.inject(Store), 'dispatch');
 
     fill('firstName', 'Ada');
@@ -78,5 +93,47 @@ describe('UserForm', () => {
       type: '[Users] Create User',
       draft: { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com' },
     });
+  });
+
+  it('prefills the form for an existing user', async () => {
+    await createComponent('1');
+
+    TestBed.inject(Store).dispatch(UsersActions.loadUsersSuccess({ users: [ada] }));
+    await fixture.whenStable();
+
+    const email: HTMLInputElement = fixture.nativeElement.querySelector('#email');
+    expect(email.value).toBe('ada@example.com');
+  });
+
+  it('reports a malformed id as not found rather than rendering the form', async () => {
+    await createComponent('abc');
+
+    expect(fixture.nativeElement.querySelector('form')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('could not be found');
+  });
+
+  it('does not ask the API for a malformed id', async () => {
+    const dispatch = vi.spyOn(TestBed.inject(Store), 'dispatch');
+
+    await createComponent('abc');
+
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('reports a missing user as not found once the load has settled', async () => {
+    await createComponent('999');
+
+    TestBed.inject(Store).dispatch(UsersActions.loadUsersSuccess({ users: [ada] }));
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('form')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('could not be found');
+  });
+
+  it('does not claim a user is missing while the load is still in flight', async () => {
+    await createComponent('999');
+
+    // loadUsers has been dispatched but nothing has come back yet.
+    expect(fixture.nativeElement.textContent).not.toContain('could not be found');
   });
 });
