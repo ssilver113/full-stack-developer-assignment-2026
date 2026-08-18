@@ -5,6 +5,8 @@
   --surface: #ffffff;
   --accent: #1f6feb;
   --accent-text: #ffffff;
+  --danger: #b42318;
+  --danger-surface: #fdf2f0;
 }
 
 * {
@@ -55,4 +57,19 @@ h1 {
 .button--primary:hover {
   color: var(--accent-text);
   filter: brightness(1.08);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  filter: none;
+  opacity: 0.6;
+}
+
+.alert {
+  background: var(--danger-surface);
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  color: var(--danger);
+  margin: 0 0 1.25rem;
+  padding: 0.7rem 0.9rem;
 }

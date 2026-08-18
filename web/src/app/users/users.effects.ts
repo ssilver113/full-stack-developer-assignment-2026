@@ -1,7 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, concatMap, map, of, switchMap } from 'rxjs';
+import { catchError, concatMap, map, of, switchMap, tap } from 'rxjs';
 
 import { UserApi } from './user-api';
 import { UsersActions } from './users.actions';
@@ -10,6 +11,7 @@ import { UsersActions } from './users.actions';
 export class UsersEffects {
   private readonly actions$ = inject(Actions);
   private readonly userApi = inject(UserApi);
+  private readonly router = inject(Router);
 
   loadUsers$ = createEffect(() =>
     this.actions$.pipe(
@@ -47,6 +49,17 @@ export class UsersEffects {
         ),
       ),
     ),
+  );
+
+  // A saved user is only visible on the list, so send the form there once the
+  // write has actually succeeded.
+  returnToList$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(UsersActions.createUserSuccess, UsersActions.updateUserSuccess),
+        tap(() => this.router.navigate(['/users'])),
+      ),
+    { dispatch: false },
   );
 }
 
