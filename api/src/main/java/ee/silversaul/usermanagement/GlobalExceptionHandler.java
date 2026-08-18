@@ -6,6 +6,8 @@ import java.util.Map;
 import ee.silversaul.usermanagement.user.EmailAlreadyRegisteredException;
 import ee.silversaul.usermanagement.user.UserNotFoundException;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -17,7 +19,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 /**
  * Translates failures into RFC 7807 problem responses. Lives in the root package
  * rather than a feature package because it applies to every feature.
+ *
+ * <p>Ordered ahead of the advice that {@code spring.mvc.problemdetails.enabled}
+ * registers: that one also handles {@link MethodArgumentNotValidException}, and
+ * would otherwise answer with a bare "Bad Request" instead of the per-field
+ * messages below. Spring still covers everything this class does not.
  */
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

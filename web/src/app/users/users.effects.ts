@@ -63,8 +63,11 @@ export class UsersEffects {
   );
 }
 
-// The API reports failures as RFC 7807 problem details; the fallback covers
-// transport errors, which arrive with no body at all.
+// Status 0 is the only case where no response arrived; anything else was answered
+// by the server, so its RFC 7807 detail is the honest message to show.
 function toMessage(error: HttpErrorResponse): string {
-  return error.error?.detail ?? 'The server could not be reached. Please try again.';
+  if (error.status === 0) {
+    return 'The server could not be reached. Please try again.';
+  }
+  return error.error?.detail ?? 'Something went wrong. Please try again.';
 }

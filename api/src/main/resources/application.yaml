@@ -18,6 +18,13 @@ spring:
     # loading work by accident and hides an endpoint's real query cost.
     open-in-view: false
 
+  mvc:
+    problemdetails:
+      # Covers the failures Spring raises before any handler runs, such as a path
+      # variable it cannot bind. Without this they return Spring's default error
+      # body, which has no `detail` field for a client to show.
+      enabled: true
+
 management:
   endpoints:
     web:
