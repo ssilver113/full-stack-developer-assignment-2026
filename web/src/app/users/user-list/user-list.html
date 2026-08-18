@@ -1,1 +1,13 @@
 <h1>Users</h1>
+
+@if (loading()) {
+  <p>Loading users...</p>
+} @else if (error(); as message) {
+  <p role="alert">{{ message }}</p>
+} @else {
+  @for (user of users(); track user.id) {
+    <p>{{ user.firstName }} {{ user.lastName }} - {{ user.email }}</p>
+  } @empty {
+    <p>No users registered yet.</p>
+  }
+}
