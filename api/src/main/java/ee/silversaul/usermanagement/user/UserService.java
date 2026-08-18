@@ -32,7 +32,8 @@ public class UserService {
         if (users.existsByEmail(email)) {
             throw new EmailAlreadyRegisteredException(email);
         }
-        User user = new User(request.firstName(), request.lastName(), email);
+        User user = new User(normaliseName(request.firstName()),
+                normaliseName(request.lastName()), email);
         return UserResponse.from(users.save(user));
     }
 
@@ -46,10 +47,17 @@ public class UserService {
             throw new EmailAlreadyRegisteredException(email);
         }
 
-        user.updateDetails(request.firstName(), request.lastName(), email);
+        user.updateDetails(normaliseName(request.firstName()),
+                normaliseName(request.lastName()), email);
         // No save call: `user` is managed within this transaction, so JPA flushes
         // the change on commit.
         return UserResponse.from(user);
+    }
+
+    // Surrounding whitespace is never meaningful in a name, and storing it would
+    // leave it in every table cell that renders the value.
+    private static String normaliseName(String name) {
+        return name.trim();
     }
 
     // Lower-cased so Bob@x.com and bob@x.com are one mailbox. Locale.ROOT because

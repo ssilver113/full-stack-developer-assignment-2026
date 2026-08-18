@@ -51,6 +51,15 @@ class UserServiceTest {
     }
 
     @Test
+    void createTrimsWhitespaceFromNames() {
+        UserResponse created = userService.create(
+                new UserRequest("  Anna  ", "  Tamm  ", "anna.tamm@example.com"));
+
+        assertThat(created.firstName()).isEqualTo("Anna");
+        assertThat(created.lastName()).isEqualTo("Tamm");
+    }
+
+    @Test
     void findAllReturnsEveryStoredUser() {
         userService.create(new UserRequest("Silver", "Saul", "silver.saul@example.com"));
         userService.create(new UserRequest("Anna", "Tamm", "anna.tamm@example.com"));
