@@ -8,12 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 /**
- * A registered user.
- *
- * <p>Bean Validation annotations deliberately live on the request DTO rather than
- * here: this class describes what the database stores, while the DTO describes
- * what callers are allowed to send. Keeping them apart means the wire contract
- * can change without a migration, and vice versa.
+ * Bean Validation lives on {@link UserRequest}: this type describes what the
+ * database stores, not what callers may send.
  */
 @Entity
 @Table(name = "users")
@@ -32,10 +28,7 @@ public class User {
     @Column(nullable = false, length = 320, unique = true)
     private String email;
 
-    /**
-     * Required by JPA, which instantiates entities reflectively. Not part of the
-     * public API of this class, hence {@code protected}.
-     */
+    // Required by JPA, which instantiates entities reflectively.
     protected User() {
     }
 
@@ -45,11 +38,8 @@ public class User {
         this.email = email;
     }
 
-    /**
-     * Applies an edit as a single operation. Exposing one intent-named method
-     * rather than a setter per field keeps the valid states of this entity in one
-     * place, so a caller cannot leave it half-updated.
-     */
+    // One mutator rather than a setter per field, so a caller cannot leave the
+    // entity half-updated.
     public void updateDetails(String firstName, String lastName, String email) {
         this.firstName = firstName;
         this.lastName = lastName;

@@ -1,7 +1,6 @@
 plugins {
-    // Resolves and downloads a matching JDK when the toolchain required below is
-    // not installed locally, so `./gradlew build` works on any machine regardless
-    // of which JDK the developer happens to have on PATH.
+    // Downloads a matching JDK when the required toolchain is not installed, so
+    // the build works regardless of which JDK is on PATH.
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 

@@ -3,29 +3,25 @@ spring:
     name: user-management-api
 
   datasource:
-    # File-based rather than in-memory, so data survives a restart and Flyway's
-    # version tracking is observable instead of being re-applied on every boot.
+    # File-based, so data survives a restart and Flyway's version tracking is
+    # observable rather than re-applied on every boot.
     url: jdbc:h2:file:./data/usersdb
     username: sa
     password: ""
 
   jpa:
     hibernate:
-      # Flyway owns the schema. Hibernate only checks that the entity mapping
-      # matches what the migrations produced, so any drift between the two fails
-      # loudly at startup rather than diverging silently.
+      # Flyway owns the schema; Hibernate only checks the mapping against it, so
+      # drift fails at startup instead of diverging silently.
       ddl-auto: validate
-    # Off by default in production-grade setups: leaving the persistence context
-    # open for the whole request makes lazy loading work by accident and hides
-    # the real query cost of an endpoint.
+    # Keeping the persistence context open for the whole request makes lazy
+    # loading work by accident and hides an endpoint's real query cost.
     open-in-view: false
 
 management:
   endpoints:
     web:
       exposure:
-        # Only the health endpoint is exposed. Actuator's remaining endpoints are
-        # not needed here, and exposing them by default would be careless.
         include: health
 
 ---
@@ -34,8 +30,7 @@ spring:
     activate:
       on-profile: dev
 
-  # Enabled only under the dev profile, and the module providing it is declared
-  # developmentOnly in the build, so the console cannot reach a built artefact.
+  # The module providing this is developmentOnly, so it cannot reach a built jar.
   h2:
     console:
       enabled: true

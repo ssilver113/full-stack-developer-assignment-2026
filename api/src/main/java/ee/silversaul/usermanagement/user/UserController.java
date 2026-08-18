@@ -16,9 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
- * HTTP entry point for user management. Deliberately thin: it maps requests to
- * service calls and shapes responses. Failures are translated centrally by
- * {@code GlobalExceptionHandler} rather than caught here.
+ * Failures are translated centrally by {@code GlobalExceptionHandler} rather than
+ * caught here.
  */
 @RestController
 @RequestMapping("/api/users")

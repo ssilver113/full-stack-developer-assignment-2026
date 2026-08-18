@@ -5,13 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * Incoming payload for creating or updating a user.
- *
- * <p>The messages are spelled out rather than left to Bean Validation's defaults,
- * because they are returned to callers and "must not be blank" is not a useful
- * thing to show a person. Length limits mirror the columns in
- * {@code V1__create_users.sql}, so oversized input is rejected as a validation
- * error rather than failing at the database.
+ * Messages are spelled out because they are returned to callers, and length
+ * limits mirror {@code V1__create_users.sql} so oversized input fails validation
+ * rather than the database.
  */
 public record UserRequest(
 

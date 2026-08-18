@@ -7,9 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Application logic for user management. Returns {@link UserResponse} rather than
- * the entity, so the transaction boundary and the persistence model both stay
- * behind this class and the controller can remain a thin HTTP adapter.
+ * Returns {@link UserResponse} rather than the entity, so the transaction
+ * boundary and the persistence model stay behind this class.
  */
 @Service
 @Transactional(readOnly = true)
@@ -48,11 +47,13 @@ public class UserService {
         }
 
         user.updateDetails(request.firstName(), request.lastName(), email);
-        // No explicit save call: `user` is managed within this transaction, so JPA
-        // detects the change and flushes it on commit.
+        // No save call: `user` is managed within this transaction, so JPA flushes
+        // the change on commit.
         return UserResponse.from(user);
     }
 
+    // Lower-cased so Bob@x.com and bob@x.com are one mailbox. Locale.ROOT because
+    // the default locale lower-cases "I" to a dotless i (U+0131) in Turkish.
     private static String normaliseEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
     }

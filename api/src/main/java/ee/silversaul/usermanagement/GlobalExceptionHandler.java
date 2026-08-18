@@ -15,27 +15,20 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
- * Translates failures into RFC 7807 problem responses, so every error leaves the
- * application in one recognisable shape instead of each controller inventing its
- * own.
- *
- * <p>Lives in the root package rather than the {@code user} feature package
- * because it is not specific to users; it applies to whatever features are added
- * later.
+ * Translates failures into RFC 7807 problem responses. Lives in the root package
+ * rather than a feature package because it applies to every feature.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Bean Validation failures. Field errors are returned as a map so a client can
-     * attach each message to the input that caused it, rather than parsing prose.
-     */
+    // Field errors are returned as a map so a client can attach each message to
+    // the input that caused it.
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationFailure(MethodArgumentNotValidException exception) {
         Map<String, String> errors = new LinkedHashMap<>();
         for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
             // Several constraints can fail on one field; keep them all rather than
-            // letting the last one silently win.
+            // letting the last one win.
             errors.merge(fieldError.getField(), fieldError.getDefaultMessage(),
                     (existing, additional) -> existing + "; " + additional);
         }
@@ -63,6 +56,8 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    // Backstop for the race the service's existence check cannot close: two
+    // concurrent requests can both pass it, but only one wins the constraint.
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(

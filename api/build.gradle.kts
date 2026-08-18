@@ -10,8 +10,7 @@ description = "User Management REST API"
 
 java {
     // Pinned rather than inherited from the local environment, so every machine
-    // and CI runner compiles against the same JDK. See settings.gradle.kts for
-    // automatic provisioning when Java 21 is not installed.
+    // and CI runner compiles against the same JDK.
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
@@ -29,8 +28,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     runtimeOnly("com.h2database:h2")
 
-    // Development only: the H2 console is a convenience for inspecting the
-    // database locally and is deliberately excluded from the built jar.
+    // Excluded from the built jar: the console is a local convenience only.
     developmentOnly("org.springframework.boot:spring-boot-h2console")
 
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
@@ -46,8 +44,7 @@ tasks.withType<Test> {
 }
 
 tasks.bootRun {
-    // `./gradlew bootRun` is the documented way to start the application locally,
-    // so the dev profile is active by default and no extra flag is needed to get
-    // the H2 console. A built jar starts without it.
+    // The documented way to start locally, so the dev profile is on by default.
+    // A built jar starts without it.
     args("--spring.profiles.active=dev")
 }
