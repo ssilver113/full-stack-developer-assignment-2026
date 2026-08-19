@@ -6,6 +6,9 @@ import java.util.Map;
 import ee.silversaul.usermanagement.user.EmailAlreadyRegisteredException;
 import ee.silversaul.usermanagement.user.UserNotFoundException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -28,6 +31,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // Field errors are returned as a map so a client can attach each message to
     // the input that caused it.
@@ -68,6 +73,10 @@ public class GlobalExceptionHandler {
     // concurrent requests can both pass it, but only one wins the constraint.
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException exception) {
+        // Logged because this also catches violations that are not the email race,
+        // and the generic detail below deliberately reveals nothing about them.
+        log.warn("Data integrity violation translated to 409 Conflict", exception);
+
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT, "The request conflicts with data that already exists.");
         problem.setTitle("Conflict");
