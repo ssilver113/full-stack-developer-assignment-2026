@@ -48,4 +48,13 @@ describe('users reducer', () => {
     expect(state.error).toBe('Service unavailable');
     expect(state.loading).toBe(false);
   });
+
+  it('clears a leftover error when a form opens', () => {
+    const failed: UsersState = { users: [ada], loading: false, error: 'Email already registered' };
+
+    const state = reducer(failed, UsersActions.formOpened());
+
+    expect(state.error).toBeNull();
+    expect(state.users).toEqual([ada]);
+  });
 });

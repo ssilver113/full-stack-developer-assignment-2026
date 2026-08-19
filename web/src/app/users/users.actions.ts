@@ -5,6 +5,7 @@ import { User, UserDraft } from './user';
 export const UsersActions = createActionGroup({
   source: 'Users',
   events: {
+    'Form Opened': emptyProps(),
     'Load Users': emptyProps(),
     'Load Users Success': props<{ users: User[] }>(),
     'Load Users Failure': props<{ error: string }>(),

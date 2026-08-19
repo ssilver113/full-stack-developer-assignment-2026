@@ -110,9 +110,17 @@ export class UserForm implements OnInit {
   }
 
   ngOnInit(): void {
+    // A malformed id matches nothing, so it is not worth any dispatch.
+    const target = this.target();
+    if (target.mode === 'invalid') {
+      return;
+    }
+
+    // An error carried over from an earlier attempt does not describe this form.
+    this.store.dispatch(UsersActions.formOpened());
+
     // The edit page can be opened directly, with no list in the store to read.
-    // A malformed id matches nothing, so it is not worth a request.
-    if (this.target().mode === 'edit') {
+    if (target.mode === 'edit') {
       this.store.dispatch(UsersActions.loadUsers());
     }
   }

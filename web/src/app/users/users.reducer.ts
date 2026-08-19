@@ -22,6 +22,7 @@ export const usersFeature = createFeature({
   name: 'users',
   reducer: createReducer(
     initialState,
+    on(UsersActions.formOpened, (state) => ({ ...state, error: null })),
     on(UsersActions.loadUsers, UsersActions.createUser, UsersActions.updateUser, (state) => ({
       ...state,
       loading: true,
