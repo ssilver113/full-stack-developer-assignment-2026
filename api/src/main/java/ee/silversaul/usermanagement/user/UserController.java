@@ -34,6 +34,11 @@ public class UserController {
         return userService.findAll();
     }
 
+    @GetMapping("/{id}")
+    public UserResponse findById(@PathVariable Long id) {
+        return userService.findById(id);
+    }
+
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest request) {
         UserResponse created = userService.create(request);

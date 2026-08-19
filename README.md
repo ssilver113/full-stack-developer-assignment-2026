@@ -1,7 +1,8 @@
 # User Management
 
 An Angular front end and a Spring Boot REST API for creating, listing and editing
-users. Users are held in NgRx Store and persisted to H2 through Flyway migrations.
+users. The UI reads its data from an NgRx Store; the API persists users to H2,
+with the schema managed by Flyway migrations.
 
 ## Prerequisites
 
@@ -62,6 +63,7 @@ Base path `/api/users`.
 | Method | Path | Request | Success |
 | --- | --- | --- | --- |
 | `GET` | `/api/users` | — | `200` + `UserResponse[]` |
+| `GET` | `/api/users/{id}` | — | `200` + `UserResponse` |
 | `POST` | `/api/users` | `UserRequest` | `201` + `Location` + `UserResponse` |
 | `PUT` | `/api/users/{id}` | `UserRequest` | `200` + `UserResponse` |
 
@@ -70,6 +72,6 @@ server-assigned `id`. All three fields are mandatory and `email` must be a valid
 address. Addresses are trimmed and lower-cased before being stored or compared, so
 `Bob@example.com` and `bob@example.com` are the same mailbox.
 
-Errors are RFC 7807 problem details: `400` on validation failure, carrying an
+Errors are RFC 9457 problem details: `400` on validation failure, carrying an
 `errors` map keyed by field; `404` for an unknown id; `409` for an email that is
 already registered.

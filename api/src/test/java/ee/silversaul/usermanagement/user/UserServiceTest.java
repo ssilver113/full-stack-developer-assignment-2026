@@ -60,7 +60,7 @@ class UserServiceTest {
     }
 
     @Test
-    void findAllReturnsEveryStoredUser() {
+    void findAllReturnsEveryStoredUserInInsertionOrder() {
         userService.create(new UserRequest("Silver", "Saul", "silver.saul@example.com"));
         userService.create(new UserRequest("Anna", "Tamm", "anna.tamm@example.com"));
 
@@ -68,7 +68,23 @@ class UserServiceTest {
 
         assertThat(users)
                 .extracting(UserResponse::email)
-                .containsExactlyInAnyOrder("silver.saul@example.com", "anna.tamm@example.com");
+                .containsExactly("silver.saul@example.com", "anna.tamm@example.com");
+    }
+
+    @Test
+    void findByIdReturnsStoredUser() {
+        Long id = userService.create(
+                new UserRequest("Silver", "Saul", "silver.saul@example.com")).id();
+
+        UserResponse found = userService.findById(id);
+
+        assertThat(found.email()).isEqualTo("silver.saul@example.com");
+    }
+
+    @Test
+    void findByIdRejectsUnknownId() {
+        assertThatThrownBy(() -> userService.findById(999L))
+                .isInstanceOf(UserNotFoundException.class);
     }
 
     @Test

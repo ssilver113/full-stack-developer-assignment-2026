@@ -100,6 +100,26 @@ class UserControllerTest {
     }
 
     @Test
+    void findByIdReturnsUserFromService() throws Exception {
+        given(userService.findById(1L))
+                .willReturn(new UserResponse(1L, "Silver", "Saul", "silver.saul@example.com"));
+
+        mockMvc.perform(get("/api/users/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.firstName").value("Silver"));
+    }
+
+    @Test
+    void findByIdReturnsNotFoundForUnknownId() throws Exception {
+        given(userService.findById(999L)).willThrow(new UserNotFoundException(999L));
+
+        mockMvc.perform(get("/api/users/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("User not found"));
+    }
+
+    @Test
     void updateReturnsNotFoundForUnknownId() throws Exception {
         willThrow(new UserNotFoundException(999L))
                 .given(userService).update(eq(999L), any());

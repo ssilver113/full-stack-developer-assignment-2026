@@ -3,6 +3,7 @@ package ee.silversaul.usermanagement.user;
 import java.util.List;
 import java.util.Locale;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +22,15 @@ public class UserService {
     }
 
     public List<UserResponse> findAll() {
-        return users.findAll().stream()
+        return users.findAll(Sort.by("id")).stream()
                 .map(UserResponse::from)
                 .toList();
+    }
+
+    public UserResponse findById(Long id) {
+        return users.findById(id)
+                .map(UserResponse::from)
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Transactional
