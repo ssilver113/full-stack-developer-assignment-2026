@@ -95,6 +95,28 @@ describe('UserForm', () => {
     expect(messages()).not.toContain('Email must be a valid address');
   });
 
+  it('moves focus to the first invalid field when a submit is rejected', async () => {
+    await createComponent();
+    fill('firstName', 'Ada');
+
+    await submit();
+
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('#lastName'));
+  });
+
+  it('links each message to its own field so it is announced with the input', async () => {
+    await createComponent();
+
+    await submit();
+
+    const email: HTMLInputElement = fixture.nativeElement.querySelector('#email');
+    const describedBy = email.getAttribute('aria-describedby');
+    expect(describedBy).toBe('email-error');
+
+    const description: HTMLElement = fixture.nativeElement.querySelector(`#${describedBy}`);
+    expect(description.textContent!.trim()).toBe('Email is required');
+  });
+
   it('dispatches a create action once every field is valid', async () => {
     await createComponent();
     const dispatch = vi.spyOn(TestBed.inject(Store), 'dispatch');

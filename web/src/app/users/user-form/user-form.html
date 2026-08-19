@@ -26,9 +26,10 @@
         formControlName="firstName"
         autocomplete="given-name"
         [attr.aria-invalid]="errorFor('firstName') ? true : null"
+        [attr.aria-describedby]="errorFor('firstName') ? 'firstName-error' : null"
       />
       @if (errorFor('firstName'); as message) {
-        <p class="user-form__error" role="alert">{{ message }}</p>
+        <p id="firstName-error" class="user-form__error" role="alert">{{ message }}</p>
       }
     </div>
 
@@ -40,9 +41,10 @@
         formControlName="lastName"
         autocomplete="family-name"
         [attr.aria-invalid]="errorFor('lastName') ? true : null"
+        [attr.aria-describedby]="errorFor('lastName') ? 'lastName-error' : null"
       />
       @if (errorFor('lastName'); as message) {
-        <p class="user-form__error" role="alert">{{ message }}</p>
+        <p id="lastName-error" class="user-form__error" role="alert">{{ message }}</p>
       }
     </div>
 
@@ -54,9 +56,10 @@
         formControlName="email"
         autocomplete="email"
         [attr.aria-invalid]="errorFor('email') ? true : null"
+        [attr.aria-describedby]="errorFor('email') ? 'email-error' : null"
       />
       @if (errorFor('email'); as message) {
-        <p class="user-form__error" role="alert">{{ message }}</p>
+        <p id="email-error" class="user-form__error" role="alert">{{ message }}</p>
       }
     </div>
 

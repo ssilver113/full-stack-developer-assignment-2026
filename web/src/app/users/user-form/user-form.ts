@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect, inject, input } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, effect, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -14,7 +14,10 @@ import { of, switchMap } from 'rxjs';
 import { UsersActions } from '../users.actions';
 import { usersFeature } from '../users.reducer';
 
-type FieldName = 'firstName' | 'lastName' | 'email';
+// Declaration order, so a failed submit lands on the topmost problem.
+const FIELD_NAMES = ['firstName', 'lastName', 'email'] as const;
+
+type FieldName = (typeof FIELD_NAMES)[number];
 
 // A route parameter is a string, so what it identifies is decided here once
 // rather than re-derived at each use. Number('abc') would otherwise reach the
@@ -50,6 +53,7 @@ function nonBlank(control: AbstractControl<string>): ValidationErrors | null {
 export class UserForm implements OnInit {
   private readonly store = inject(Store);
   private readonly formBuilder = inject(NonNullableFormBuilder);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly id = input<string>();
 
@@ -142,10 +146,20 @@ export class UserForm implements OnInit {
     return null;
   }
 
+  private focusFirstInvalid(): void {
+    const field = FIELD_NAMES.find((name) => this.form.controls[name].invalid);
+    if (field) {
+      this.host.nativeElement.querySelector<HTMLInputElement>(`#${field}`)?.focus();
+    }
+  }
+
   protected submit(): void {
     if (this.form.invalid) {
       // Messages are shown once a field is touched, so reveal them all at once.
       this.form.markAllAsTouched();
+      // Without this the click is a no-op whenever the messages are already on
+      // screen. Focusing carries the screen reader to the field and its message.
+      this.focusFirstInvalid();
       return;
     }
 
