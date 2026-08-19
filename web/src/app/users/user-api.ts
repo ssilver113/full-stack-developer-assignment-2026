@@ -13,6 +13,10 @@ export class UserApi {
     return this.http.get<User[]>(this.baseUrl);
   }
 
+  findById(id: number): Observable<User> {
+    return this.http.get<User>(`${this.baseUrl}/${id}`);
+  }
+
   create(draft: UserDraft): Observable<User> {
     return this.http.post<User>(this.baseUrl, draft);
   }

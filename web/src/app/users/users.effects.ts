@@ -25,6 +25,24 @@ export class UsersEffects {
     ),
   );
 
+  loadUser$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UsersActions.loadUser),
+      switchMap(({ id }) =>
+        this.userApi.findById(id).pipe(
+          map((user) => UsersActions.loadUserSuccess({ user })),
+          catchError((error: HttpErrorResponse) =>
+            of(
+              error.status === 404
+                ? UsersActions.userNotFound({ id })
+                : UsersActions.loadUserFailure({ error: toMessage(error) }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
   // concatMap rather than switchMap: a write already in flight must not be
   // cancelled by the next one.
   createUser$ = createEffect(() =>

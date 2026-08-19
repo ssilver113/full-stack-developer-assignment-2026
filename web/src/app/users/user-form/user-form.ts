@@ -65,6 +65,7 @@ export class UserForm implements OnInit {
 
   protected readonly busy = this.store.selectSignal(usersFeature.selectLoading);
   protected readonly error = this.store.selectSignal(usersFeature.selectError);
+  private readonly missing = this.store.selectSignal(usersFeature.selectNotFound);
 
   protected readonly target = computed<Target>(() => {
     const raw = this.id();
@@ -89,15 +90,9 @@ export class UserForm implements OnInit {
   // Editing a user we have not got yet: either still loading, or the load failed.
   protected readonly awaitingUser = computed(() => this.isEdit() && this.existing() === undefined);
 
-  // Absent only once a load has settled. While it is in flight, or when it
-  // failed outright, the user's absence has not actually been established.
-  protected readonly notFound = computed(() => {
-    const target = this.target();
-    if (target.mode === 'invalid') {
-      return true;
-    }
-    return target.mode === 'edit' && this.existing() === undefined && !this.busy() && !this.error();
-  });
+  // An id that matches nothing is missing without asking; anything else is
+  // missing only because the API said so with a 404.
+  protected readonly notFound = computed(() => this.target().mode === 'invalid' || this.missing());
 
   constructor() {
     // Only prefill an untouched form, so a store update cannot overwrite typing.
@@ -123,9 +118,10 @@ export class UserForm implements OnInit {
     // An error carried over from an earlier attempt does not describe this form.
     this.store.dispatch(UsersActions.formOpened());
 
-    // The edit page can be opened directly, with no list in the store to read.
+    // The edit page can be opened directly, so the user it edits is fetched
+    // rather than assumed to be sitting in the store from the list page.
     if (target.mode === 'edit') {
-      this.store.dispatch(UsersActions.loadUsers());
+      this.store.dispatch(UsersActions.loadUser({ id: target.id }));
     }
   }
 

@@ -25,8 +25,19 @@ describe('user routes', () => {
     TestBed.inject(HttpTestingController).verify();
   });
 
-  async function respondWith(users: unknown[]): Promise<void> {
-    TestBed.inject(HttpTestingController).expectOne('/api/users').flush(users);
+  async function respondWith(url: string, body: object): Promise<void> {
+    TestBed.inject(HttpTestingController).expectOne(url).flush(body);
+    await harness.fixture.whenStable();
+  }
+
+  // The shape the API's GlobalExceptionHandler actually returns for an unknown id.
+  async function respondWithNotFound(url: string): Promise<void> {
+    TestBed.inject(HttpTestingController)
+      .expectOne(url)
+      .flush(
+        { title: 'Not Found', status: 404, detail: 'User 999 was not found' },
+        { status: 404, statusText: 'Not Found' },
+      );
     await harness.fixture.whenStable();
   }
 
@@ -36,7 +47,7 @@ describe('user routes', () => {
 
   it('binds the route id, so an existing user can be edited', async () => {
     await harness.navigateByUrl('/users/1/edit', UserForm);
-    await respondWith([ada]);
+    await respondWith('/api/users/1', ada);
 
     const email: HTMLInputElement = harness.fixture.nativeElement.querySelector('#email');
     expect(email.value).toBe('ada@example.com');
@@ -44,7 +55,7 @@ describe('user routes', () => {
 
   it('reports a missing user instead of an empty edit form', async () => {
     await harness.navigateByUrl('/users/999/edit', UserForm);
-    await respondWith([ada]);
+    await respondWithNotFound('/api/users/999');
 
     expect(harness.fixture.nativeElement.querySelector('form')).toBeNull();
     expect(text()).toContain('could not be found');
@@ -53,7 +64,7 @@ describe('user routes', () => {
   it('does not reach the API for a malformed id', async () => {
     await harness.navigateByUrl('/users/abc/edit', UserForm);
 
-    TestBed.inject(HttpTestingController).expectNone('/api/users');
+    expect(TestBed.inject(HttpTestingController).match(() => true)).toEqual([]);
     expect(text()).toContain('could not be found');
   });
 
@@ -66,7 +77,7 @@ describe('user routes', () => {
 
   it('lists the users loaded from the API', async () => {
     await harness.navigateByUrl('/users', UserList);
-    await respondWith([ada]);
+    await respondWith('/api/users', [ada]);
 
     expect(text()).toContain('Lovelace');
   });

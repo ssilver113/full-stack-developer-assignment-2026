@@ -135,11 +135,20 @@ describe('UserForm', () => {
   it('prefills the form for an existing user', async () => {
     await createComponent('1');
 
-    TestBed.inject(Store).dispatch(UsersActions.loadUsersSuccess({ users: [ada] }));
+    TestBed.inject(Store).dispatch(UsersActions.loadUserSuccess({ user: ada }));
     await fixture.whenStable();
 
     const email: HTMLInputElement = fixture.nativeElement.querySelector('#email');
     expect(email.value).toBe('ada@example.com');
+  });
+
+  it('asks for the single user being edited rather than the whole list', async () => {
+    const dispatch = vi.spyOn(TestBed.inject(Store), 'dispatch');
+
+    await createComponent('1');
+
+    expect(dispatch).toHaveBeenCalledWith({ type: '[Users] Load User', id: 1 });
+    expect(dispatch).not.toHaveBeenCalledWith({ type: '[Users] Load Users' });
   });
 
   it('reports a malformed id as not found rather than rendering the form', async () => {
@@ -157,20 +166,34 @@ describe('UserForm', () => {
     expect(dispatch).not.toHaveBeenCalled();
   });
 
-  it('reports a missing user as not found once the load has settled', async () => {
+  it('reports a missing user once the API has answered 404', async () => {
     await createComponent('999');
 
-    TestBed.inject(Store).dispatch(UsersActions.loadUsersSuccess({ users: [ada] }));
+    TestBed.inject(Store).dispatch(UsersActions.userNotFound({ id: 999 }));
     await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelector('form')).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('could not be found');
   });
 
+  it('shows a failed load as an error rather than as a missing user', async () => {
+    await createComponent('1');
+
+    TestBed.inject(Store).dispatch(
+      UsersActions.loadUserFailure({ error: 'The server could not be reached. Please try again.' }),
+    );
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).not.toContain('could not be found');
+    expect(fixture.nativeElement.querySelector('.alert')!.textContent).toContain(
+      'could not be reached',
+    );
+  });
+
   it('does not claim a user is missing while the load is still in flight', async () => {
     await createComponent('999');
 
-    // loadUsers has been dispatched but nothing has come back yet.
+    // loadUser has been dispatched but nothing has come back yet.
     expect(fixture.nativeElement.textContent).not.toContain('could not be found');
   });
 });
