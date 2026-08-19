@@ -3,6 +3,9 @@ import { createFeature, createReducer, createSelector, on } from '@ngrx/store';
 import { User } from './user';
 import { UsersActions } from './users.actions';
 
+// A plain array rather than @ngrx/entity. The adapter is the idiomatic default and
+// would earn its place with a delete endpoint, pagination or several entity types;
+// with three endpoints it would reduce this reducer to delegation.
 export interface UsersState {
   users: User[];
   loading: boolean;
