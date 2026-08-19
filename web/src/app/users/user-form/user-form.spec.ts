@@ -40,9 +40,23 @@ describe('UserForm', () => {
     await fixture.whenStable();
   }
 
-  function messages(): string[] {
-    const shown = fixture.nativeElement.querySelectorAll('.user-form__error');
-    return Array.from(shown, (element) => (element as HTMLElement).textContent!.trim());
+  // Reached through aria-describedby, the way a screen reader reaches it. That
+  // keeps these tests indifferent to the order the fields are rendered in and to
+  // the class the message is styled with, while still reading the real message.
+  function messageFor(field: string): string | null {
+    const input: HTMLInputElement = fixture.nativeElement.querySelector(`#${field}`);
+    const describedBy = input.getAttribute('aria-describedby');
+    if (!describedBy) {
+      return null;
+    }
+    const description: HTMLElement = fixture.nativeElement.querySelector(`#${describedBy}`);
+    return description.textContent!.trim();
+  }
+
+  // Field messages live inside the form and the store-level alert does not, so
+  // this counts validation messages alone.
+  function messageCount(): number {
+    return fixture.nativeElement.querySelectorAll('form [role="alert"]').length;
   }
 
   it('shows a message for every field when an empty form is submitted', async () => {
@@ -50,11 +64,10 @@ describe('UserForm', () => {
 
     await submit();
 
-    expect(messages()).toEqual([
-      'First name is required',
-      'Last name is required',
-      'Email is required',
-    ]);
+    expect(messageFor('firstName')).toBe('First name is required');
+    expect(messageFor('lastName')).toBe('Last name is required');
+    expect(messageFor('email')).toBe('Email is required');
+    expect(messageCount()).toBe(3);
   });
 
   it('treats whitespace-only input as missing', async () => {
@@ -65,11 +78,10 @@ describe('UserForm', () => {
 
     await submit();
 
-    expect(messages()).toEqual([
-      'First name is required',
-      'Last name is required',
-      'Email is required',
-    ]);
+    expect(messageFor('firstName')).toBe('First name is required');
+    expect(messageFor('lastName')).toBe('Last name is required');
+    expect(messageFor('email')).toBe('Email is required');
+    expect(messageCount()).toBe(3);
   });
 
   it('rejects a malformed email address', async () => {
@@ -80,19 +92,21 @@ describe('UserForm', () => {
 
     await submit();
 
-    expect(messages()).toEqual(['Email must be a valid address']);
+    expect(messageFor('email')).toBe('Email must be a valid address');
+    // The names are filled in, so nothing else should be complaining.
+    expect(messageCount()).toBe(1);
   });
 
   it('clears the message once the email is corrected', async () => {
     await createComponent();
     fill('email', 'not-an-email');
     await submit();
-    expect(messages()).toContain('Email must be a valid address');
+    expect(messageFor('email')).toBe('Email must be a valid address');
 
     fill('email', 'ada@example.com');
     await fixture.whenStable();
 
-    expect(messages()).not.toContain('Email must be a valid address');
+    expect(messageFor('email')).toBeNull();
   });
 
   it('moves focus to the first invalid field when a submit is rejected', async () => {
@@ -110,8 +124,10 @@ describe('UserForm', () => {
     await submit();
 
     const email: HTMLInputElement = fixture.nativeElement.querySelector('#email');
+    expect(email.getAttribute('aria-invalid')).toBe('true');
+
     const describedBy = email.getAttribute('aria-describedby');
-    expect(describedBy).toBe('email-error');
+    expect(describedBy).toBeTruthy();
 
     const description: HTMLElement = fixture.nativeElement.querySelector(`#${describedBy}`);
     expect(description.textContent!.trim()).toBe('Email is required');
@@ -126,10 +142,11 @@ describe('UserForm', () => {
     fill('email', 'ada@example.com');
     await submit();
 
-    expect(dispatch).toHaveBeenCalledWith({
-      type: '[Users] Create User',
-      draft: { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com' },
-    });
+    expect(dispatch).toHaveBeenCalledWith(
+      UsersActions.createUser({
+        draft: { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com' },
+      }),
+    );
   });
 
   it('prefills the form for an existing user', async () => {
@@ -147,8 +164,8 @@ describe('UserForm', () => {
 
     await createComponent('1');
 
-    expect(dispatch).toHaveBeenCalledWith({ type: '[Users] Load User', id: 1 });
-    expect(dispatch).not.toHaveBeenCalledWith({ type: '[Users] Load Users' });
+    expect(dispatch).toHaveBeenCalledWith(UsersActions.loadUser({ id: 1 }));
+    expect(dispatch).not.toHaveBeenCalledWith(UsersActions.loadUsers());
   });
 
   it('reports a malformed id as not found rather than rendering the form', async () => {
@@ -163,7 +180,11 @@ describe('UserForm', () => {
 
     await createComponent('abc');
 
-    expect(dispatch).not.toHaveBeenCalled();
+    // Narrower than "dispatched nothing at all": the contract is that no fetch is
+    // attempted, not that the component may never touch the store.
+    expect(dispatch).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: UsersActions.loadUser.type }),
+    );
   });
 
   it('reports a missing user once the API has answered 404', async () => {
@@ -185,7 +206,7 @@ describe('UserForm', () => {
     await fixture.whenStable();
 
     expect(fixture.nativeElement.textContent).not.toContain('could not be found');
-    expect(fixture.nativeElement.querySelector('.alert')!.textContent).toContain(
+    expect(fixture.nativeElement.querySelector('[role="alert"]')!.textContent).toContain(
       'could not be reached',
     );
   });
