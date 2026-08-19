@@ -1,6 +1,12 @@
 import { Component, OnInit, computed, effect, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { of, switchMap } from 'rxjs';
@@ -29,6 +35,12 @@ const MAX_LENGTH_MESSAGES: Record<FieldName, string> = {
   email: 'Email must be at most 320 characters',
 };
 
+// Validators.required accepts whitespace-only input, which the API's @NotBlank
+// then rejects; trimming first keeps the two rules identical.
+function nonBlank(control: AbstractControl<string>): ValidationErrors | null {
+  return control.value.trim().length === 0 ? { required: true } : null;
+}
+
 @Component({
   selector: 'app-user-form',
   imports: [ReactiveFormsModule, RouterLink],
@@ -42,9 +54,9 @@ export class UserForm implements OnInit {
   readonly id = input<string>();
 
   protected readonly form = this.formBuilder.group({
-    firstName: ['', [Validators.required, Validators.maxLength(100)]],
-    lastName: ['', [Validators.required, Validators.maxLength(100)]],
-    email: ['', [Validators.required, Validators.email, Validators.maxLength(320)]],
+    firstName: ['', [nonBlank, Validators.maxLength(100)]],
+    lastName: ['', [nonBlank, Validators.maxLength(100)]],
+    email: ['', [nonBlank, Validators.email, Validators.maxLength(320)]],
   });
 
   protected readonly busy = this.store.selectSignal(usersFeature.selectLoading);

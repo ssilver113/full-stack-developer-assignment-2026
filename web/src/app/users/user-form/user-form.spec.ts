@@ -57,6 +57,21 @@ describe('UserForm', () => {
     ]);
   });
 
+  it('treats whitespace-only input as missing', async () => {
+    await createComponent();
+    fill('firstName', '   ');
+    fill('lastName', '   ');
+    fill('email', '   ');
+
+    await submit();
+
+    expect(messages()).toEqual([
+      'First name is required',
+      'Last name is required',
+      'Email is required',
+    ]);
+  });
+
   it('rejects a malformed email address', async () => {
     await createComponent();
     fill('firstName', 'Ada');
